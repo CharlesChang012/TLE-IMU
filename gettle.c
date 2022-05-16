@@ -1,4 +1,4 @@
-#include<stdio.h>
+#include <stdio.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <stdlib.h>
@@ -6,8 +6,11 @@
 #include <sys/errno.h>
 
 void errExit(char *reason);
+void get_TLE(char satellite[]);
 
 int main() {
+
+    
 
     char *host = "celestrak.com"; // 目標 URI
     char *PORT_NUM = "80"; // HTTP port
@@ -78,28 +81,56 @@ int main() {
     shutdown(cfd, SHUT_WR);
 
     char substr[] = "ST-2";
-    char TLE1[95];
-    char TLE2[95];
+    char TLE1[69];
+    char TLE2[69];
     int index = -1;
-    for (int i = 0; response[i] != '\0'; i++) {
+    for (int i = 0; i < strlen(response); i++) {
         index = -1;
-        for (int j = 0; substr[j] != '\0'; j++) {
+        for (int j = 0; j < strlen(substr); j++) {
             if (response[i + j] != substr[j]) {
                 index = -1;
                 break;
-            }
-            index = i;
-        }
+            }  
+            index = i+26;
+        }  
         if (index != -1) {
-            strncpy(TLE1, &response[index], 95);
+            strncpy(&TLE1[0], &response[index], 69);
+            printf("size of TLE1: %d\n", sizeof(TLE1));
+            printf("strlen of TLE1: %d\n", strlen(TLE1));
+            printf("printf with for using sizeof: ");
+            for(int k = 0; k<sizeof(TLE1); k++){
+                printf("%d", TLE1[k]);
+            }
+            printf("\nTLE1[69]: %c\n", TLE1[69]);
+            printf("printf String: %s\n", TLE1);
+            index += 71;
+            strncpy(&TLE2[0], &response[index], 69);
+            for(int k = 0; k<sizeof(TLE2); k++){
+                printf("%c", TLE2[k]);
+            }
             break;
         }
     }
 
-    index += 97;
-    printf("%s\n", TLE1);
-    strncpy(TLE2, &response[index], 95);
-    printf("%s\n", TLE2);
+    FILE *fp;
+    fp = fopen("ST-2", "ab+");
+
+    if(fp == NULL){
+      printf("Error! Can't find TLE file to write!");   
+      exit(1);             
+    }
+
+   fprintf(fp,"# %s\n", substr);
+   for(int i = 0; i < sizeof(TLE1); i++){
+       fprintf(fp,"%c", TLE1[i]);
+   }
+   fprintf(fp,"\n");
+   for(int i = 0; i < sizeof(TLE2); i++){
+       fprintf(fp,"%c", TLE2[i]);
+   }
+   fclose(fp);
+
+    
     /*printf("debug");
 
     char *ST2;
@@ -126,4 +157,8 @@ void errExit(char *reason) {
     char *buff = reason ? reason : strerror(errno);
     printf("Error: %s", buff);
     exit(EXIT_FAILURE);
+}
+
+void get_TLE(char satellite[]){
+   
 }
